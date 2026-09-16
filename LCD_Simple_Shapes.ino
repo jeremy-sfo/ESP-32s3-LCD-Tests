@@ -107,8 +107,6 @@ void setup() {
 }
 
 void loop() {
-    delay(1000);
-
     lv_point_t point; // make a variable for the point of touch
 
     lv_indev_get_point(touchInput, &point); // read the touch point; if any
@@ -125,8 +123,12 @@ void loop() {
         Serial.print(", ");
         Serial.println(lv_obj_get_y(rectangle));*/
 
-        lv_obj_set_pos(rectangle, point.x, point.y);
+        lvgl_port_lock(-1);
 
-        delay(10);
+        lv_obj_set_pos(rectangle, point.x - 100, point.y - 50);
+
+        lvgl_port_unlock();
+
+        delay(15);
     }
 }
