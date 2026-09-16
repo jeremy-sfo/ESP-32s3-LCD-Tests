@@ -8,6 +8,10 @@
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
 
+lv_indev_t *touchInput; // for reading the touch screen device
+
+lv_obj_t *rectangle; // rectangle
+
 void setup() {
 
     Serial.begin(115200); // start monitor at 112500 baud
@@ -60,6 +64,8 @@ void setup() {
     lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x101820), LV_PART_MAIN ); // set the background's color * (set screen active, set the color, paint the main screen)
     Serial.println("Background color set");
 
+    touchInput = lv_indev_get_next(NULL); // set the touchInput to the registered touch device
+
     // ********************* DRAW A LABEL ********************************
 
     lv_obj_t *text = lv_label_create(lv_scr_act()); // create a lable to draw on
@@ -79,7 +85,7 @@ void setup() {
 
     // ********************* DRAW A RECTANGLE ********************************
 
-    lv_obj_t *rectangle = lv_obj_create(lv_scr_act()); // create an object called rectangle
+    rectangle = lv_obj_create(lv_scr_act()); // define the rectangle as an object
     Serial.println("Rectangle created");
 
     lv_obj_set_size(rectangle, 200, 100); // set the rectangle to 200x100 px
@@ -91,7 +97,7 @@ void setup() {
     lv_obj_set_style_radius(rectangle, 0, LV_PART_MAIN); // make the rectangle be 0% round
     Serial.println("Rectangle radius set");
 
-    lv_obj_align(rectangle, LV_ALIGN_CENTER, 0, 0);
+    //lv_obj_align(rectangle, LV_ALIGN_CENTER, 0, 0);
     Serial.println("Rectangle aligned");
 
     lvgl_port_unlock();
@@ -102,5 +108,25 @@ void setup() {
 
 void loop() {
     delay(1000);
-    Serial.println("Running");
+
+    lv_point_t point; // make a variable for the point of touch
+
+    lv_indev_get_point(touchInput, &point); // read the touch point; if any
+    
+    // output reading if the finger is pressing the screen
+    if (lv_indev_get_type(touchInput) == LV_INDEV_STATE_PRESSED) {
+       /*Serial.print("Touch: ");
+        Serial.print(point.x);
+        Serial.print(", ");
+        Serial.print(point.y);
+
+        Serial.print(" | Rectangle: ");
+        Serial.print(lv_obj_get_x(rectangle));
+        Serial.print(", ");
+        Serial.println(lv_obj_get_y(rectangle));*/
+
+        lv_obj_set_pos(rectangle, point.x, point.y);
+
+        delay(10);
+    }
 }
