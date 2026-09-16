@@ -1,3 +1,55 @@
+## Arduino IDE Setup
+
+### Board
+
+Board: ESP32S3 Dev Module
+
+Board package:
+ESP32 by Espressif Systems
+Recommended version: 3.0.7
+
+### Tools settings
+
+USB CDC On Boot: Enabled
+CPU Frequency: 240MHz (WiFi)
+Core Debug Level: None
+USB DFU On Boot: Disabled
+Erase All Flash Before Sketch Upload: Disabled
+Events Run On: Core 1
+Arduino Runs On: Core 1
+Flash Mode: QIO 80MHz
+Flash Size: 16MB (128Mb)
+JTAG Adapter: Disabled
+PSRAM: OPI PSRAM
+USB Firmware MSC On Boot: Disabled
+Partition Scheme: 16M Flash (3MB APP/9.9MB FATFS)
+Upload Mode: UART0 / Hardware CDC
+Upload Speed: 921600
+Port: Select the ESP32-S3-Touch-LCD-5's USB port
+
+### Important
+
+The ESP32-S3-Touch-LCD-5 requires OPI PSRAM for the large RGB framebuffer.
+
+If the screen fails with:
+
+    lcd_rgb_panel_alloc_frame_buffers
+    ESP_ERR_NO_MEM
+
+check that:
+
+    PSRAM = OPI PSRAM
+    Flash Size = 16MB
+    Board = ESP32S3 Dev Module
+
+USB CDC On Boot should be Enabled when using the board's USB connection for Serial Monitor output.
+
+--------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+
+
 | Supported ESP SoCs | ESP32 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-S2 | ESP32-S3 | ESP32-P4 |
 | ------------------ | ----- | -------- | -------- | -------- | -------- | -------- | -------- |
 
