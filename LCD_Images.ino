@@ -5,14 +5,32 @@
 #include "lvgl_v8_port.h" // connector between esp32 and the lcd
 #include <esp_display_panel.hpp> // gives access to the board and lcd
 
+#include "assets/coolio.c"
+#include "assets/depressed.c"
+#include "assets/gentleman.c"
+#include "assets/sad.c"
+
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
 
 lv_indev_t *touchInput; // for reading the touch screen device
 
 LV_IMG_DECLARE(coolio);
+LV_IMG_DECLARE(depressed);
+LV_IMG_DECLARE(gentleman);
+LV_IMG_DECLARE(sad);
 
 lv_obj_t *image; // create an obj called image
+
+const lv_img_dsc_t *pictures[] = { // make an array for the images
+    &coolio, 
+    &depressed,
+    &gentleman,
+    &sad
+};
+
+int curPicture = 0;
+int lastChange = 0;
 
 void setup() {
 
@@ -89,7 +107,15 @@ void setup() {
 }
 
 void loop() {
-    lv_point_t point; // make a variable for the point of touch
+    if(millis() - lastChange > 2000){ // every 2 seconds
+        curPicture++; // increase index
 
-    lv_indev_get_point(touchInput, &point); // read the touch point; if any
+        lvgl_port_lock(-1);
+
+        lv_img_set_src(image, pictures[curPicture]); // set image to index
+
+        lvgl_port_unlock();
+
+        lastChange = millis();
+    }
 }
