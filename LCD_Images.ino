@@ -98,17 +98,20 @@ void setup() {
 
     lv_img_set_src(image, &coolio); // set the image to the contents of coolio's adress
 
-    Serial.println("Set Image to Coolio");
+    Serial.println("Set Image to start");
 
     lv_obj_center(image); // center the image
 
     Serial.println("Centered Image");
 
+    lastChange = millis(); // reset lastChange
 }
 
 void loop() {
     if(millis() - lastChange > 2000){ // every 2 seconds
+
         curPicture++; // increase index
+        if(curPicture >= 4) curPicture = 0; // reset index if too large
 
         lvgl_port_lock(-1);
 
