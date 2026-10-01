@@ -13,7 +13,7 @@
 
 // MPU pins and address
 #define SDA_PIN 8
-#define SCL_PIN 9;
+#define SCL_PIN 9
 #define MPU_ADDRESS 0x68
 
 
@@ -104,6 +104,8 @@ void setup() {
 
     // ******************** MPU SETUP *************************************
 
+    Wire.begin(SDA_PIN, SCL_PIN); // start mpu i2c
+
     // wake up the MPU
     Wire.beginTransmission(MPU_ADDRESS);
     Wire.write(0x6B);
@@ -135,7 +137,7 @@ void loop() {
     Wire.beginTransmission(MPU_ADDRESS);
     Wire.write(0x3B);
     Wire.endTransmission(false);
-    Wire.requestForm(MPU_ADDRESS, 14, true); // request 14 bytes of data (acl, skip temp, gyro)
+    Wire.requestFrom(MPU_ADDRESS, 14, true); // request 14 bytes of data (acl, skip temp, gyro)
 
     // read 8 bytes from acl (1 bit at a time)
     int16_t aclX = Wire.read() << 8 | Wire.read();
