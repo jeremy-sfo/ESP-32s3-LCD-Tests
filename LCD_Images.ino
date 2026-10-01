@@ -4,29 +4,40 @@
 #include <lvgl.h> // for creating ui to put on the screen
 #include "lvgl_v8_port.h" // connector between esp32 and the lcd
 #include <esp_display_panel.hpp> // gives access to the board and lcd
+#include <Wire.h> // for mpu
 
 #include "assets/coolio.c"
 #include "assets/depressed.c"
 #include "assets/gentleman.c"
 #include "assets/sad.c"
 
+// MPU pins and address
+#define SDA_PIN 8
+#define SCL_PIN 9;
+#define MPU_ADDRESS 0x68
+
+
+// gyroscope offset tuning
+const int16_t GYRO_OFFSET_X = 1540;
+const int16_t GYRO_OFFSET_Y = -58;
+const int16_t GYRO_OFFSET_Z = 46;
+
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
+
 
 lv_indev_t *touchInput; // for reading the touch screen device
 
 LV_IMG_DECLARE(coolio);
 LV_IMG_DECLARE(depressed);
 LV_IMG_DECLARE(gentleman);
-LV_IMG_DECLARE(sad);
 
 lv_obj_t *image; // create an obj called image
 
 const lv_img_dsc_t *pictures[] = { // make an array for the images
     &coolio, 
     &depressed,
-    &gentleman,
-    &sad
+    &gentleman
 };
 
 int curPicture = 0;
@@ -36,6 +47,8 @@ void setup() {
 
     Serial.begin(115200); // start monitor at 112500 baud
     delay(1000);
+
+    // ********************* BOARD CREATION ****************************
 
     Serial.println("Starting LVGL Text Test");
 
@@ -55,6 +68,7 @@ void setup() {
 
     Serial.println("LCD and Touch objects obtained");
 
+    // lcd null check
     if (lcd == nullptr) {
         Serial.println("LCD IS NULL!");
         return;
@@ -88,6 +102,14 @@ void setup() {
 
     touchInput = lv_indev_get_next(NULL); // set the touchInput to the registered touch device
 
+    // ******************** MPU SETUP *************************************
+
+    // wake up the MPU
+    Wire.beginTransmission(MPU_ADDRESS);
+    Wire.write(0x6B);
+    Wire.write(0x00);
+    Wire.endTransmission();
+
     // ********************* DRAW AN IMAGE ********************************
 
     Serial.println("Creating Image");
@@ -108,17 +130,38 @@ void setup() {
 }
 
 void loop() {
-    if(millis() - lastChange > 2000){ // every 2 seconds
+    
+    // request mpu data
+    Wire.beginTransmission(MPU_ADDRESS);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+    Wire.requestForm(MPU_ADDRESS, 14, true); // request 14 bytes of data (acl, skip temp, gyro)
 
-        curPicture++; // increase index
-        if(curPicture >= 4) curPicture = 0; // reset index if too large
+    // read 8 bytes from acl (1 bit at a time)
+    int16_t aclX = Wire.read() << 8 | Wire.read();
+    int16_t aclY = Wire.read() << 8 | Wire.read();
+    int16_t aclZ = Wire.read() << 8 | Wire.read();
 
-        lvgl_port_lock(-1);
+    // skip temp
+    Wire.read();
+    Wire.read();
 
-        lv_img_set_src(image, pictures[curPicture]); // set image to index
+    // read the 6 bytes from gyro
+    int16_t gyroX = Wire.read() << 8 | Wire.read();
+    int16_t gyroY = Wire.read() << 8 | Wire.read();
+    int16_t gyroZ = Wire.read() << 8 | Wire.read();
 
-        lvgl_port_unlock();
+    Serial.print("Accel values: ");
+    Serial.print(aclX);
+    Serial.print(", ");
+    Serial.print(aclY);
+    Serial.print(", ");
+    Serial.println(aclY);
 
-        lastChange = millis();
-    }
+    Serial.print("Gyro values: ");
+    Serial.print(gyroX - GYRO_OFFSET_X);
+    Serial.print(", ");
+    Serial.print(gyroY - GYRO_OFFSET_Y);
+    Serial.print(", ");
+    Serial.println(gyroZ - GYRO_OFFSET_Z);
 }
