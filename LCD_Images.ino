@@ -48,46 +48,40 @@ void setup() {
     Serial.begin(115200); // start monitor at 112500 baud
     delay(1000);
 
-    // ********************* BOARD CREATION ****************************
+    Wire.begin(SDA_PIN, SCL_PIN); // start mpu i2c
 
-    Serial.println("Starting LVGL Text Test");
+     // ********************* BOARD CREATION ****************************
 
-    Board *board = new Board(); // declare the display board
-    Serial.println("Board object created");
+    esp_panel::board::Board *board = new esp_panel::board::Board(); // declare the display board
+    Serial.println("Board Object Created");
 
-    if (!board->init()) { // if we can't init, return
-        Serial.println("Board init failed!");
+    if(!board->init()){
         return;
-    }
+    } Serial.println("Board Initialized!");
 
-    Serial.println("Board Initialized!");
+    static_cast<esp_panel::drivers::BusI2C *>( board->getTouch()->getBus() )->configI2C_HostSkipInit();
+    
+    // check the board begin result
+    bool beginResult = board->begin();
+    if (!beginResult) { 
+        Serial.println("BOARD BEGIN FAILED!");
+        return;
+    } Serial.println("Board begun successfully");
 
     // get lcd and touch objects
     LCD *lcd = board->getLCD();
     Touch *touch = board->getTouch();
-
     Serial.println("LCD and Touch objects obtained");
 
-    // lcd null check
+    // lcd and touch null check
     if (lcd == nullptr) {
         Serial.println("LCD IS NULL!");
         return;
-    }
-    else {
-        Serial.println("LCD EXISTS AFTER INIT!");
-    }
+    } else if (touch == nullptr) {
+        Serial.println("TOUCH IS NULL!");
+    } Serial.println("LCD and Touch initiallized");
 
-    bool beginResult = board->begin(); // begin the board
-
-    Serial.print("Board begin result = ");
-    Serial.println(beginResult);
-
-    if (!beginResult) { // exit if the board didn't begin
-        Serial.println("BOARD BEGIN FAILED!");
-        return;
-    }
-
-    Serial.println("Board begun successfully");
+    
 
     lvgl_port_init(lcd, touch); // register hardware to the lcd and touch objects
     Serial.println("LVGL port initialized");
@@ -103,8 +97,6 @@ void setup() {
     touchInput = lv_indev_get_next(NULL); // set the touchInput to the registered touch device
 
     // ******************** MPU SETUP *************************************
-
-    Wire.begin(SDA_PIN, SCL_PIN); // start mpu i2c
 
     // wake up the MPU
     Wire.beginTransmission(MPU_ADDRESS);
@@ -133,7 +125,7 @@ void setup() {
 
 void loop() {
     
-    // request mpu data
+    /*// request mpu data
     Wire.beginTransmission(MPU_ADDRESS);
     Wire.write(0x3B);
     Wire.endTransmission(false);
@@ -158,12 +150,12 @@ void loop() {
     Serial.print(", ");
     Serial.print(aclY);
     Serial.print(", ");
-    Serial.println(aclY);
+    Serial.println(aclZ);
 
     Serial.print("Gyro values: ");
     Serial.print(gyroX - GYRO_OFFSET_X);
     Serial.print(", ");
     Serial.print(gyroY - GYRO_OFFSET_Y);
     Serial.print(", ");
-    Serial.println(gyroZ - GYRO_OFFSET_Z);
+    Serial.println(gyroZ - GYRO_OFFSET_Z);*/
 }
