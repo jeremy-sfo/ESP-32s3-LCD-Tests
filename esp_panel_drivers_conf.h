@@ -7,9 +7,10 @@
  * @file  esp_panel_drivers_conf.h
  * @brief Configuration file for ESP Panel Drivers
  *
- * This file contains all the configurations needed for ESP Panel Drivers.
+ * This file contains all the configurations needed for ESP Panel Drivers in my 2026 halloween costume project.
  * Users can modify these configurations according to their requirements.
  */
+ 
 
 #pragma once
 
@@ -24,11 +25,11 @@
  * Enable or disable bus drivers used in the factory class. Disable to reduce code size.
  * Set to `1` to enable, `0` to disable.
  */
-#define ESP_PANEL_DRIVERS_BUS_USE_ALL                   (1)
+#define ESP_PANEL_DRIVERS_BUS_USE_ALL                   (0)
 #if !ESP_PANEL_DRIVERS_BUS_USE_ALL
     #define ESP_PANEL_DRIVERS_BUS_USE_SPI               (0)
     #define ESP_PANEL_DRIVERS_BUS_USE_QSPI              (0)
-    #define ESP_PANEL_DRIVERS_BUS_USE_RGB               (0)
+    #define ESP_PANEL_DRIVERS_BUS_USE_RGB               (1)
     #define ESP_PANEL_DRIVERS_BUS_USE_I2C               (0)
     #define ESP_PANEL_DRIVERS_BUS_USE_MIPI_DSI          (0)
 #endif // ESP_PANEL_DRIVERS_BUS_USE_ALL
@@ -50,7 +51,7 @@
  * |   0   |   1   |                 Yes                 |              No            |
  * |   1   |   1   |                 Yes                 |              Yes           |
  */
-#define ESP_PANEL_DRIVERS_BUS_COMPILE_UNUSED_DRIVERS    (1)
+#define ESP_PANEL_DRIVERS_BUS_COMPILE_UNUSED_DRIVERS    (0)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// LCD Configurations ///////////////////////////////////////////////////

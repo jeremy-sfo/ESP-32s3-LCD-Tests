@@ -158,7 +158,7 @@
  *
  * Set to `1` to enable touch panel support, `0` to disable
  */
-#define ESP_PANEL_BOARD_USE_TOUCH               (1)
+#define ESP_PANEL_BOARD_USE_TOUCH               (0)
 
 #if ESP_PANEL_BOARD_USE_TOUCH
 /**
@@ -273,7 +273,7 @@
  *
  * Set to `1` to enable IO expander support, `0` to disable
  */
-#define ESP_PANEL_BOARD_USE_EXPANDER            (1)
+#define ESP_PANEL_BOARD_USE_EXPANDER            (0)
 
 #if ESP_PANEL_BOARD_USE_EXPANDER
 /**

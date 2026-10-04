@@ -18,7 +18,7 @@
  *
  * Set to `1` to enable supported board configuration, `0` to disable
  */
-#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (1)
+#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (0)
 
 #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
 /**
