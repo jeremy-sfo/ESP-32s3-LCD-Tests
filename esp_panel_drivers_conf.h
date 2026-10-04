@@ -30,7 +30,7 @@
     #define ESP_PANEL_DRIVERS_BUS_USE_SPI               (0)
     #define ESP_PANEL_DRIVERS_BUS_USE_QSPI              (0)
     #define ESP_PANEL_DRIVERS_BUS_USE_RGB               (1)
-    #define ESP_PANEL_DRIVERS_BUS_USE_I2C               (0)
+    #define ESP_PANEL_DRIVERS_BUS_USE_I2C               (1)
     #define ESP_PANEL_DRIVERS_BUS_USE_MIPI_DSI          (0)
 #endif // ESP_PANEL_DRIVERS_BUS_USE_ALL
 

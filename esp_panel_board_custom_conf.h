@@ -561,7 +561,7 @@
                                                             // Typically set to 400K
 #define ESP_PANEL_BOARD_EXPANDER_I2C_SCL_PULLUP     (1)     // 0/1. Typically set to 1
 #define ESP_PANEL_BOARD_EXPANDER_I2C_SDA_PULLUP     (1)     // 0/1. Typically set to 1
-#define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SCL         (18)
+#define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SCL         (9)
 #define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SDA         (8)
 #endif // ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST
 /* For device */
