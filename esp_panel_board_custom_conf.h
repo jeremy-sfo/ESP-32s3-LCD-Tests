@@ -540,7 +540,7 @@
  * - `TCA95XX_8BIT`
  * - `TCA95XX_16BIT`
  */
-#define ESP_PANEL_BOARD_EXPANDER_CHIP           CH244G
+#define ESP_PANEL_BOARD_EXPANDER_CHIP           CH422G
 
 /**
  * @brief IO expander I2C bus parameters configuration
