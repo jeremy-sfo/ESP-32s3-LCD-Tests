@@ -192,7 +192,7 @@
     #define ESP_PANEL_BOARD_LCD_RGB_IO_HSYNC        (46)
     #define ESP_PANEL_BOARD_LCD_RGB_IO_VSYNC        (3)
     #define ESP_PANEL_BOARD_LCD_RGB_IO_DE           (17)    // -1 if not used
-    #define ESP_PANEL_BOARD_LCD_RGB_IO_PCLK         (9)
+    #define ESP_PANEL_BOARD_LCD_RGB_IO_PCLK         (7)
     #define ESP_PANEL_BOARD_LCD_RGB_IO_DISP         (-1)    // -1 if not used. Typically set to -1
 
                                                             // The following sheet shows the mapping of ESP GPIOs to
