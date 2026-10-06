@@ -49,8 +49,8 @@ bool mpuWriteRegister(uint8_t reg, uint8_t value){ // register, write values
     
     uint8_t data[2] = {reg, value}; // an array to store write info
 
-    esp_err_t result = i2c_master_write_to_device( // write at I2C_NUM_0 at MPU_ADDRESS for this data that is sizeof(data) large and then wait 100ms
-        I2C_NUM_0,
+    esp_err_t result = i2c_master_write_to_device( // write at I2C_HOST at MPU_ADDRESS for this data that is sizeof(data) large and then wait 100ms
+        I2C_HOST,
         MPU_ADDRESS,
         data, 
         sizeof(data), 
@@ -64,8 +64,8 @@ bool mpuWriteRegister(uint8_t reg, uint8_t value){ // register, write values
 
 bool mpuReadRegisters(uint8_t reg, uint8_t *data, size_t length){ // register, address of the data, length of read
 
-    esp_err_t result = i2c_master_write_read_device( // read device with I2C_NUM_0 pin, at MPU_ADDRESS at the register of reg pointer, (1?) read these data pointers that is length long then wait 100ms
-        I2C_NUM_0,
+    esp_err_t result = i2c_master_write_read_device( // read device with I2C_HOST pin, at MPU_ADDRESS at the register of reg pointer, (1?) read these data pointers that is length long then wait 100ms
+        I2C_HOST,
         MPU_ADDRESS,
         &reg,
         1, 
@@ -85,20 +85,20 @@ bool readMPU(){
 
     if(!mpuReadRegisters(0x3B, data, 14)){
 
-        Serial.println("************** MPU READ FAILED ******************");
-        return;
+        Serial.println("MPU READ FAILED");
+        return false;
     }
 
-    // what does this format mean??
-    int_16_t aclX = (data[0] << 8) | data[1]; 
-    int_16_t aclY = (data[2] << 8) | data[3];
-    int_16_t aclZ = (data[4] << 8) | data[5];
+    // read each measurement as high as 8 bits and as low as 8 bits then combine into 16 bit value
+    int16_t aclX = (data[0] << 8) | data[1]; 
+    int16_t aclY = (data[2] << 8) | data[3];
+    int16_t aclZ = (data[4] << 8) | data[5];
 
     // data[6] and data[7] are temperature
 
-    int_16_t gyroX = (data[8] << 8) | data[9];
-    int_16_t gyroY = (data[10] << 8) | data[11];
-    int_16_t gyroZ = (data[12] << 8) | data[13];
+    int16_t gyroX = (data[8] << 8) | data[9];
+    int16_t gyroY = (data[10] << 8) | data[11];
+    int16_t gyroZ = (data[12] << 8) | data[13];
 
     Serial.print("Accel: ");
     Serial.print(aclX);
@@ -199,6 +199,6 @@ void loop() {
     
   readMPU();
   delay(1000);
-  
+
 }
 
