@@ -24,6 +24,17 @@ const int16_t GYRO_OFFSET_X = 1540;
 const int16_t GYRO_OFFSET_Y = -58;
 const int16_t GYRO_OFFSET_Z = 46;
 
+int16_t yawValue; // current yaw angle
+int16_t yawChange; // change in yaw angle
+int prevTime = millis(); // time
+int deltaTime; // change in time
+
+// angles for test
+const float FULL_LEFT_ANGLE   = -45.0;
+const float SLIGHT_LEFT_ANGLE = -15.0;
+const float SLIGHT_RIGHT_ANGLE = 15.0;
+const float FULL_RIGHT_ANGLE  = 45.0;
+
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
 
@@ -100,7 +111,11 @@ bool readMPU(){
     int16_t gyroY = (data[10] << 8) | data[11];
     int16_t gyroZ = (data[12] << 8) | data[13];
 
-    Serial.print("Accel: ");
+    gyroX -= GYRO_OFFSET_X;
+    gyroY -= GYRO_OFFSET_Y;
+    gyroZ -= GYRO_OFFSET_Z;
+
+    Serial.print("Acl: ");
     Serial.print(aclX);
     Serial.print(", ");
     Serial.print(aclY);
@@ -108,13 +123,32 @@ bool readMPU(){
     Serial.println(aclZ);
 
     Serial.print("Gyro: ");
-    Serial.print(gyroX - GYRO_OFFSET_X);
+    Serial.print(gyroX);
     Serial.print(", ");
-    Serial.print(gyroY - GYRO_OFFSET_Y);
+    Serial.print(gyroY);
     Serial.print(", ");
-    Serial.println(gyroZ - GYRO_OFFSET_Z);
+    Serial.println(gyroZ);
+
+    deltaTime = millis() - prevTime; // change in time
+
+    yawChange = (gyroZ - gyroOffsetZ) / 131 * deltaTime; //  gyroZ needs to be changed into degrees/second so: (gyroZ - gyroOffsetZ) / 131
+    
+    yawValue += yawChange; // add the change in angle to current angle
 
     return true;
+}
+
+void updateLCD(){
+
+    if (yawAngle < FULL_LEFT_ANGLE) Serial.println("Full left angle"); 
+    
+    else if (yawAngle < SLIGHT_LEFT_ANGLE) Serial.println("Slight left angle"); 
+    // slight left
+
+    else if (yawAngle < SLIGHT_RIGHT_ANGLE) Serial.println("Slight right angle"); 
+
+    else if (yawAngle < FULL_RIGHT_ANGLE) Serial.println("Full right angle"); 
+
 }
 
 void setup() {
@@ -198,7 +232,8 @@ void setup() {
 void loop() {
     
   readMPU();
-  delay(1000);
+  updateLCD();
+  delay(500);
 
 }
 
