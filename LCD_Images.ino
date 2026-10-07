@@ -43,6 +43,7 @@ enum yawDirection {
 };
 
 yawDirection currentYawDirection = CENTER;
+bool yawDirectionChanged = false;
 
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
@@ -210,9 +211,11 @@ yawDirection getYawDirection(){
 
 void updateDirection(){
 
+    yawDirectionChanged = false;
+
     yawDirection newYawDirection = getYawDirection(); // read the mpu for yaw direction
 
-    if(newYawDirection != currentYawDirection) currentYawDirection = newYawDirection;
+    if(newYawDirection != currentYawDirection){ currentYawDirection = newYawDirection; yawDirectionChanged = true; }
 
 }
 
@@ -221,21 +224,30 @@ void updateImage(){
     // yaw
     switch(currentYawDirection){
 
+        lvgl_port_lock(-1); // lock lvgl
+
         case FULL_LEFT:
             lv_img_set_src(image, &gentleman);
+            break;
 
         case SLIGHT_LEFT:
             lv_img_set_src(image, &depressed);
+            break;
 
         case CENTER:
             lv_img_set_src(image, &gentleman);
+            break;
 
         case SLIGHT_RIGHT:
             lv_img_set_src(image, &coolio);
+            break;
 
         case FULL_RIGHT:
             lv_img_set_src(image, &gentleman);
+            break;
     }
+
+    lvgl_port_unlock();
 }
 
 
@@ -243,7 +255,7 @@ void updateLCD(){
 
     updateDirection();
 
-    updateImage();
+    if(yawDirectionChanged) updateImage();
 
 }
 
@@ -326,7 +338,7 @@ void loop() {
     
     readMPU();
 
-    // updateLCD();
+    updateLCD();
 
     delay(100);
 
