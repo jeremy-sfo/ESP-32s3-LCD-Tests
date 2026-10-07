@@ -22,18 +22,20 @@
 // gyroscope offset tuning
 const int16_t GYRO_OFFSET_X = 1540;
 const int16_t GYRO_OFFSET_Y = -58;
-const int16_t GYRO_OFFSET_Z = 46;
+float gyro_offset_z = 0;
 
-int16_t yawValue; // current yaw angle
-int16_t yawChange; // change in yaw angle
+float yawAngle; // current yaw angle
+float yawChange; // change in yaw angle
 int prevTime = millis(); // time
-int deltaTime; // change in time
 
 // angles for test
 const float FULL_LEFT_ANGLE   = -45.0;
 const float SLIGHT_LEFT_ANGLE = -15.0;
 const float SLIGHT_RIGHT_ANGLE = 15.0;
 const float FULL_RIGHT_ANGLE  = 45.0;
+
+int successfulRead = 0;
+int failedRead = 0;
 
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
@@ -75,7 +77,7 @@ bool mpuWriteRegister(uint8_t reg, uint8_t value){ // register, write values
 
 bool mpuReadRegisters(uint8_t reg, uint8_t *data, size_t length){ // register, address of the data, length of read
 
-    esp_err_t result = i2c_master_write_read_device( // read device with I2C_HOST pin, at MPU_ADDRESS at the register of reg pointer, (1?) read these data pointers that is length long then wait 100ms
+esp_err_t result = i2c_master_write_read_device( // read device with I2C_HOST pin, at MPU_ADDRESS at the register of reg pointer, read length number of bytes then put them into data arraythen wait 100ms
         I2C_HOST,
         MPU_ADDRESS,
         &reg,
@@ -85,9 +87,40 @@ bool mpuReadRegisters(uint8_t reg, uint8_t *data, size_t length){ // register, a
         pdMS_TO_TICKS(100)
     );
 
-    //Serial.printf("MPU read result: %s/n", esp_err_to_name(result));
+    Serial.printf("MPU read result: %s/n", esp_err_to_name(result));
 
     return result == ESP_OK;  
+}
+
+void calibrateGyroZ(){
+
+    const int sampleSize = 600; // number of samples
+    long sum; // sum of the samples
+
+    Serial.println("================================");
+    Serial.println("GYRO Z CALIBRATION");
+    Serial.println("Keep the MPU completely still!");
+    Serial.println("================================");
+
+    delay(1000);
+
+    for(int i = 0; i < sampleSize; i++){
+
+        uint8_t data[14];
+
+        if(!mpuReadRegisters(0x3B, data, 14)){ Serial.println("GYRO Z CALIBRATION FAILED"); return; }
+        
+        int16_t gyroZ = (data[12] << 8) | data[13]; // read the data
+        sum+= gyroZ; // add it to the sum
+
+        delay(5);
+    }
+
+    gyro_offset_z = float(sum) / sampleSize; // calculate average gyro bias
+
+    Serial.print("Gyro z offset: ");
+    Serial.print(gyro_offset_z, 2); // print offset with 2 decimal points
+    Serial.println("° ");
 }
 
 bool readMPU(){
@@ -113,9 +146,17 @@ bool readMPU(){
 
     gyroX -= GYRO_OFFSET_X;
     gyroY -= GYRO_OFFSET_Y;
-    gyroZ -= GYRO_OFFSET_Z;
+    gyroZ -= gyro_offset_z;
 
-    Serial.print("Acl: ");
+    float deltaTime = (millis() - prevTime) / 1000.0f; // change in time in seconds
+
+    float gyroZDegPerSec = gyroZ / 131.0f; // change gyro to change in seconds
+
+    yawChange = gyroZDegPerSec * deltaTime; //  gyro is angular velocity so multiply speed by time to get distance
+
+    yawAngle += yawChange; // add the change in angle to current angle
+
+   /*Serial.print("Acl: ");
     Serial.print(aclX);
     Serial.print(", ");
     Serial.print(aclY);
@@ -127,13 +168,15 @@ bool readMPU(){
     Serial.print(", ");
     Serial.print(gyroY);
     Serial.print(", ");
-    Serial.println(gyroZ);
+    Serial.println(gyroZ);*/
 
-    deltaTime = millis() - prevTime; // change in time
+    Serial.print("Yaw: ");
+    Serial.print(yawAngle);
+    Serial.println("° ");
+    Serial.print("Gyro z current velocity: ");
+    Serial.print(gyroZDegPerSec);
+    Serial.println("°/sec ");
 
-    yawChange = (gyroZ - gyroOffsetZ) / 131 * deltaTime; //  gyroZ needs to be changed into degrees/second so: (gyroZ - gyroOffsetZ) / 131
-    
-    yawValue += yawChange; // add the change in angle to current angle
 
     return true;
 }
@@ -145,9 +188,11 @@ void updateLCD(){
     else if (yawAngle < SLIGHT_LEFT_ANGLE) Serial.println("Slight left angle"); 
     // slight left
 
-    else if (yawAngle < SLIGHT_RIGHT_ANGLE) Serial.println("Slight right angle"); 
+    else if (yawAngle < SLIGHT_RIGHT_ANGLE) Serial.println("Center angle"); 
 
-    else if (yawAngle < FULL_RIGHT_ANGLE) Serial.println("Full right angle"); 
+    else if (yawAngle < FULL_RIGHT_ANGLE) Serial.println("Slight right angle"); 
+
+    else Serial.println("Full right angle");
 
 }
 
@@ -182,7 +227,7 @@ void setup() {
 
     // lcd and touch null check
     if (lcd == nullptr) { Serial.println("LCD IS NULL!"); return; } 
-    else if (touch == nullptr) { Serial.println("TOUCH IS NULL!"); } 
+    //else if (touch == nullptr) { Serial.println("TOUCH IS NULL!"); } 
     
     Serial.println("LCD and Touch initiallized");
 
@@ -208,6 +253,8 @@ void setup() {
 
     Serial.println("MPU woke up!");
 
+    calibrateGyroZ();
+
     // ********************* DRAW AN IMAGE ********************************
 
     // commented out for now
@@ -231,9 +278,11 @@ void setup() {
 
 void loop() {
     
-  readMPU();
-  updateLCD();
-  delay(500);
+    readMPU();
+    // updateLCD();
+
+    prevTime = millis();
+    delay(100);
 
 }
 
