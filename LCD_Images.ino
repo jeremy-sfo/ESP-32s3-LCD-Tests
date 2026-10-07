@@ -29,13 +29,20 @@ float yawChange; // change in yaw angle
 int prevTime = millis(); // time
 
 // angles for test
-const float FULL_LEFT_ANGLE   = -45.0;
-const float SLIGHT_LEFT_ANGLE = -15.0;
-const float SLIGHT_RIGHT_ANGLE = 15.0;
-const float FULL_RIGHT_ANGLE  = 45.0;
+const float FULL_LEFT_ANGLE   = -65.0;
+const float SLIGHT_LEFT_ANGLE = -30.0;
+const float SLIGHT_RIGHT_ANGLE = 30.0;
+const float FULL_RIGHT_ANGLE  = 65.0;
 
-int successfulRead = 0;
-int failedRead = 0;
+enum yawDirection {
+    FULL_LEFT,
+    SLIGHT_LEFT, 
+    CENTER,
+    SLIGHT_RIGHT,
+    FULL_RIGHT
+};
+
+yawDirection currentYawDirection = CENTER;
 
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
@@ -70,7 +77,7 @@ bool mpuWriteRegister(uint8_t reg, uint8_t value){ // register, write values
         pdMS_TO_TICKS(100)
     );
 
-    //Serial.printf("MPU write result: %s/n", esp_err_to_name(result));
+    if(result != ESP_OK) Serial.printf("MPU write result: %s\n", esp_err_to_name(result));
 
     return result == ESP_OK; // return the result depending on if we were able to write at the reg
 }
@@ -87,7 +94,7 @@ esp_err_t result = i2c_master_write_read_device( // read device with I2C_HOST pi
         pdMS_TO_TICKS(100)
     );
 
-    Serial.printf("MPU read result: %s/n", esp_err_to_name(result));
+    if(result != ESP_OK) Serial.printf("MPU write result: %s\n", esp_err_to_name(result));
 
     return result == ESP_OK;  
 }
@@ -95,7 +102,7 @@ esp_err_t result = i2c_master_write_read_device( // read device with I2C_HOST pi
 void calibrateGyroZ(){
 
     const int sampleSize = 600; // number of samples
-    long sum; // sum of the samples
+    long sum = 0; // sum of the samples
 
     Serial.println("================================");
     Serial.println("GYRO Z CALIBRATION");
@@ -150,6 +157,8 @@ bool readMPU(){
 
     float deltaTime = (millis() - prevTime) / 1000.0f; // change in time in seconds
 
+    prevTime = millis(); // update time tracking
+
     float gyroZDegPerSec = gyroZ / 131.0f; // change gyro to change in seconds
 
     yawChange = gyroZDegPerSec * deltaTime; //  gyro is angular velocity so multiply speed by time to get distance
@@ -181,18 +190,60 @@ bool readMPU(){
     return true;
 }
 
+yawDirection getYawDirection(){
+
+    if (yawAngle < FULL_LEFT_ANGLE)
+        return FULL_LEFT;
+
+    else if (yawAngle < SLIGHT_LEFT_ANGLE)
+        return SLIGHT_LEFT;
+
+    else if (yawAngle < SLIGHT_RIGHT_ANGLE)
+        return CENTER;
+
+    else if (yawAngle < FULL_RIGHT_ANGLE)
+        return SLIGHT_RIGHT;
+
+    else
+        return FULL_RIGHT;
+}
+
+void updateDirection(){
+
+    yawDirection newYawDirection = getYawDirection(); // read the mpu for yaw direction
+
+    if(newYawDirection != currentYawDirection) currentYawDirection = newYawDirection;
+
+}
+
+void updateImage(){
+
+    // yaw
+    switch(currentYawDirection){
+
+        case FULL_LEFT:
+            lv_img_set_src(image, &gentleman);
+
+        case SLIGHT_LEFT:
+            lv_img_set_src(image, &depressed);
+
+        case CENTER:
+            lv_img_set_src(image, &gentleman);
+
+        case SLIGHT_RIGHT:
+            lv_img_set_src(image, &coolio);
+
+        case FULL_RIGHT:
+            lv_img_set_src(image, &gentleman);
+    }
+}
+
+
 void updateLCD(){
 
-    if (yawAngle < FULL_LEFT_ANGLE) Serial.println("Full left angle"); 
-    
-    else if (yawAngle < SLIGHT_LEFT_ANGLE) Serial.println("Slight left angle"); 
-    // slight left
+    updateDirection();
 
-    else if (yawAngle < SLIGHT_RIGHT_ANGLE) Serial.println("Center angle"); 
-
-    else if (yawAngle < FULL_RIGHT_ANGLE) Serial.println("Slight right angle"); 
-
-    else Serial.println("Full right angle");
+    updateImage();
 
 }
 
@@ -209,9 +260,6 @@ void setup() {
     if(!board->init()){ Serial.println("BOARD CREATION FAILED"); return; }
 
     Serial.println("Board Initialized!");
-
-    // do we need this?
-   // static_cast<esp_panel::drivers::BusI2C *>( board->getTouch()->getBus() )->configI2C_HostSkipInit();
     
     // check the board begin result
     bool beginResult = board->begin(); 
@@ -255,23 +303,21 @@ void setup() {
 
     calibrateGyroZ();
 
-    // ********************* DRAW AN IMAGE ********************************
+    // ********************* DRAW AN IMAGE *******************************
 
-    // commented out for now
-
-    /*Serial.println("Creating Image");
+    Serial.println("Creating Image");
 
     image = lv_img_create(lv_scr_act()); // set image's definition 
 
-    Serial.println("Define Image");
+    Serial.println("Image Defined");
 
-    lv_img_set_src(image, &coolio); // set the image to the contents of coolio's adress
+    lv_img_set_src(image, &gentleman); // set the image to the contents of coolio's adress
 
-    Serial.println("Set Image to start");
+    Serial.println("Image set");
 
     lv_obj_center(image); // center the image
 
-    Serial.println("Centered Image");
+    Serial.println("Image Centered");
 
     lastChange = millis(); // reset lastChange*/
 }
@@ -279,9 +325,9 @@ void setup() {
 void loop() {
     
     readMPU();
+
     // updateLCD();
 
-    prevTime = millis();
     delay(100);
 
 }
